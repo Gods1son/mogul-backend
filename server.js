@@ -237,7 +237,7 @@ var config = {
            console.log("generate api", er);
             return false;
           }
-          console.log("api value", api);
+          //console.log("api value", api);
           apiData = api;
           //console.log('API key: %s', api.key);
           //console.log('Password for this key: %s', api.password);
@@ -361,7 +361,7 @@ var config = {
   app.use('/createUsername',
   function(req, res) {
     try{
-      var db = new PouchDB('https://' + process.env.USER + ':' + process.env.PASSWORD + '@' + process.env.HOST + '/all_users', {skip_setup: true});
+      var db = new PouchDB('https://' + process.env.USER + ':' + process.env.PASSWORD + '@' + process.env.HOST + '/_users', {skip_setup: true});
     var us = req.body.username;
     var pw = req.body.password;
     var usname = req.body.user;
@@ -431,7 +431,7 @@ var config = {
 app.use('/loginUsername',
   function(req, res) {
     try{
-      var db = new PouchDB('https://' + process.env.USER + ':' + process.env.PASSWORD + '@' + process.env.HOST + '/all_users', {skip_setup: true});
+      var db = new PouchDB('https://' + process.env.USER + ':' + process.env.PASSWORD + '@' + process.env.HOST + '/_users', {skip_setup: true});
     //console.log(db);
     var us = req.body.username;
     var pw = req.body.password;
@@ -454,7 +454,7 @@ app.use('/loginUsername',
              console.log("generate api", er);
              res.send(false);
             }
-            console.log("api value", api);
+            //console.log("api value", api);
             apiData = api;
   
             security = {
