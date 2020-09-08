@@ -9,7 +9,7 @@ PouchDB.plugin(require('pouchdb-authentication'));
 var Cloudant = require('@cloudant/cloudant');
 const Stripe = require('stripe');
 const stripe = Stripe(process.env.stripeKey);
-const dbs = ['dbings','dbproducts','dbsales','dbclients','dbexpenses','dbrestock','dbprodings','dbprodothers','dbsettings'];
+const dbs = ['db'];
 
 
 var app = express();
@@ -398,7 +398,7 @@ var config = {
             let promises = [];
             //create multiple dbs for user
               for(i = 0; i < dbs.length; i++){
-                var dbname = dbs[i] + "$" + us;
+                var dbname = us + "$" + dbs[i];
                 promises.push(createEachDB(cloudant, dbname, security));
               }
   
@@ -466,7 +466,7 @@ app.use('/loginUsername',
             let promises = [];
             //create multiple dbs for user
               for(i = 0; i < dbs.length; i++){
-                var dbname = dbs[i] + "$" + us;
+                var dbname = us + "$" + dbs[i];
                 promises.push(addKeyToDB(cloudant, dbname, security));
               }
   
