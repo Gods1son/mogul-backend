@@ -9,7 +9,72 @@ PouchDB.plugin(require('pouchdb-authentication'));
 var Cloudant = require('@cloudant/cloudant');
 const Stripe = require('stripe');
 const stripe = Stripe(process.env.stripeKey);
+const fs = require('fs');
+const AWS = require('aws-sdk');
+var multer = require('multer')
+var multerS3 = require('multer-s3')
 const dbs = ['db'];
+const s3ID = process.env.s3ID;
+const s3SECRET = process.env.s3SECRET;
+
+// The name of the bucket that you have created
+const BUCKET_NAME = process.env.BUCKET_NAME;
+
+const s3 = new AWS.S3();
+
+AWS.config.update({
+  secretAccessKey: s3SECRET,
+  accessKeyId: s3ID,
+  region: process.env.region,
+});
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype === "image/jpeg" || file.mimetype === "image/jpg" || file.mimetype === "image/gif" || file.mimetype === "image/png") {
+    cb(null, true);
+  } else {
+    cb(new Error("Invalid file type, only JPEG and PNG is allowed!"), false);
+  }
+};
+
+const upload = multer({
+  fileFilter,
+  storage: multerS3({
+    acl: "public-read",
+    s3,
+    bucket: BUCKET_NAME,
+    limits: {
+        fileSize: 1024 * 1024 * 5 // we are allowing only 5 MB files
+    },
+    metadata: function (req, file, cb) {
+      cb(null, {fieldName: file.fieldname});
+    },
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString() + "-" + file.originalname);
+    },
+  }),
+});
+/*
+const s3 = new AWS.S3({
+  accessKeyId: s3ID,
+  secretAccessKey: s3SECRET,
+  bucket: BUCKET_NAME
+});
+
+var upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: BUCKET_NAME,
+    acl: 'public-read',
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    metadata: function (req, file, cb) {
+      cb(null, {fieldName: file.fieldname});
+    },
+    key: function (req, file, cb) {
+      console.log(file);
+      cb(null, Date.now().toString())
+    }
+  })
+})*/
 
 
 var app = express();
@@ -167,6 +232,7 @@ var config = {
     res.send("Welcome here! " + id);
   });
 
+
   function createEachDB(cloudant, dbname, security) {
     return new Promise((resolve, reject) => {
       cloudant.db.create(dbname).then(() => {
@@ -284,6 +350,24 @@ var config = {
     })
     //res.send("Value: " + req.query.value);
   });
+
+  app.use('/uploadImages', upload.array("photos", 3), function(req, res, next) {
+    //console.log("body", req);
+    var images = {};
+    try {
+      images.success = true;
+      images["images"] = {};
+      for(var i = 0; i < req.files.length; i++){
+        var oName = req.files[i].originalname;
+        images.images[oName] = req.files[i].location;
+      }
+      res.send(images);
+    } catch (err) {
+        console.log("error");
+        images.success = false;
+        res.send(images);
+    }
+  })
 
 
   app.use('/addNewPage',
